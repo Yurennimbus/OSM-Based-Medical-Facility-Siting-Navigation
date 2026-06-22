@@ -73,12 +73,12 @@ Prj_1/
 ### 快速开始
 
 **环境要求**: Python ≥ 3.10，网络连接（加载 Leaflet/Vue CDN）
-> ⚠ 系统默认无底图。如需底图，选择天地图并在官网申请 API Key。免费高德瓦片存在坐标偏移，已移除。OSM 在中国大陆访问受限。
+> ⚠ 系统默认无底图。如需底图，选择天地图并在官网申请 API Key。
 
 ```bash
 # 1. 克隆仓库
 git clone <repo-url>
-cd Prj_1
+cd <部署的文件夹位置>
 
 # 2. 创建虚拟环境 (推荐)
 python -m venv venv
@@ -98,6 +98,8 @@ python run.py
 ```
 
 浏览器自动打开 → `http://localhost:8000`。按 `Ctrl+C` 停止。
+
+**也可以直接双击 start.bat 启动，自动打开网页后，在页面上方选择你要导入文件的目录，系统会自动扫描识别。**
 
 ### 自定义城市数据
 
@@ -142,8 +144,7 @@ python run.py
 1. 所有数据使用 WGS84 (EPSG:4326) 坐标系
 2. Shapefile 默认 UTF-8 编码读取，如有乱码请转换编码
 3. 大数据集（>5 万道路段）路由计算需 5-30 秒
-4. 推荐浏览器：Chrome / Edge / Firefox 最新版
-5. `Data/` 和 `*.db` 已加入 `.gitignore`，请勿提交地理数据
+4.`Data/` 和 `*.db` 已加入 `.gitignore`，请勿提交地理数据
 
 ---
 
@@ -184,12 +185,12 @@ A universal WebGIS platform based on **FastAPI + Vue3 + Leaflet + NetworkX** for
 ### Quick Start
 
 **Prerequisites**: Python ≥ 3.10, internet connection (for Leaflet/Vue CDN)
-> ⚠ Default is no basemap. For basemap, select Tianditu and apply for an API key. Free Gaode tiles have coordinate offset (removed). OSM is restricted in mainland China.
+> ⚠ Default is no basemap. For basemap, select Tianditu and apply for an API key.
 
 ```bash
 # 1. Clone
 git clone <repo-url>
-cd Prj_1
+cd <file>
 
 # 2. Create virtual environment (recommended)
 python -m venv venv
@@ -209,6 +210,8 @@ python run.py
 ```
 
 Browser opens → `http://localhost:8000`. Press `Ctrl+C` to stop.
+
+**You can also double-click start.bat to start it directly. After automatically opening the webpage, select the directory where you want to import the file at the top of the page, and the system will automatically scan and recognize it. **
 
 ### Custom City Data
 
@@ -239,8 +242,7 @@ Browser opens → `http://localhost:8000`. Press `Ctrl+C` to stop.
 1. All data must use WGS84 (EPSG:4326) CRS
 2. Shapefile encoding defaults to UTF-8; convert if garbled
 3. Large datasets (>50K road segments) may need 5-30s for routing
-4. Recommended browsers: Chrome / Edge / Firefox (latest)
-5. `Data/` and `*.db` are gitignored — do not commit geographic data
+4. `Data/` and `*.db` are gitignored — do not commit geographic data
 
 ---
 
