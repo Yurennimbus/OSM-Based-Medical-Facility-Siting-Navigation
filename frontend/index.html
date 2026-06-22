@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>WebGIS - 医疗设施选址与导航系统</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
+  onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.min.js';document.head.appendChild(s);"></script>
+<script src="https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;height:100vh;overflow:hidden;background:#1a1a2e}
+#app{display:flex;flex-direction:column;height:100vh}
+.topbar{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;padding:6px 16px;display:flex;align-items:center;justify-content:space-between;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.topbar h1{font-size:15px;font-weight:600;letter-spacing:.5px}
+.topbar .right-group{display:flex;align-items:center;gap:10px}
+.topbar select{padding:5px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.3);font-size:13px;background:rgba(255,255,255,.1);color:#fff;min-width:160px;cursor:pointer}
+.topbar select option{background:#1a1a2e;color:#fff}
+.topbar .btn-sm{padding:5px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.3);font-size:11px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff;transition:.2s}
+.topbar .btn-sm:hover{background:rgba(255,255,255,.2)}
+.main-content{display:flex;flex:1;overflow:hidden}
+.left-panel{width:380px;background:#f0f2f5;border-right:1px solid #d9d9d9;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px}
+.panel-card{background:#fff;border-radius:8px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.panel-card h3{font-size:13px;color:#1a1a2e;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #302b63}
+.map-container{flex:1;position:relative}
+#map{width:100%;height:100%;background:#e8e8e8}
+.slider-group{margin-bottom:5px}
+.slider-group label{display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:1px}
+.slider-group input[type=range]{width:100%;accent-color:#302b63;height:4px}
+.weight-display{font-weight:700;color:#302b63;min-width:32px;text-align:right}
+.radio-group{display:flex;gap:4px;flex-wrap:wrap}
+.radio-group label{font-size:11px;cursor:pointer;padding:3px 8px;border:1px solid #d9d9d9;border-radius:4px;background:#fff;user-select:none;transition:.15s}
+.radio-group label:has(input:checked){background:#302b63;color:#fff;border-color:#302b63}
+.radio-group input{display:none}
+.btn{padding:7px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;transition:.2s}
+.btn-primary{background:linear-gradient(135deg,#302b63,#0f0c29);color:#fff;width:100%}
+.btn-primary:hover{opacity:.9}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-accent{background:#e65100;color:#fff;font-size:11px;padding:4px 10px}
+.btn-small{padding:3px 8px;font-size:10px;border-radius:4px;cursor:pointer;border:1px solid #d9d9d9;background:#fff;transition:.15s}
+.btn-small:hover{background:#f0f0f0}
+.btn-small.primary{background:#302b63;color:#fff;border-color:#302b63}
+.btn-small.danger{background:#e53935;color:#fff;border-color:#c62828}
+.result-row{font-size:11px;padding:5px 8px;border-bottom:1px solid #f0f0f0;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s}
+.result-row:hover{background:#e8e8ff}
+.result-row .rank{font-weight:700;color:#302b63;min-width:18px}
+.badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600}
+.badge-green{background:#c8e6c9;color:#2e7d32}
+.badge-blue{background:#bbdefb;color:#1565c0}
+.badge-red{background:#ffcdd2;color:#c62828}
+.route-card{background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;padding:7px 8px;margin-bottom:6px;font-size:11px;cursor:pointer;transition:.15s}
+.route-card:hover{border-color:#302b63}
+.route-card.selected{border:2px solid #302b63;background:#e8e8ff}
+.route-meta{display:flex;gap:5px;margin:3px 0;flex-wrap:wrap}
+.route-meta span{background:#eee;padding:1px 5px;border-radius:3px;font-size:10px}
+.tabs{display:flex;gap:0;margin-bottom:0;flex-wrap:wrap}
+.tab{padding:5px 16px;cursor:pointer;font-size:12px;background:#e0e0e0;border-radius:6px 6px 0 0;transition:.15s;white-space:nowrap;margin-bottom:-1px}
+.tab.active{background:#fff;font-weight:600;color:#302b63;box-shadow:0 -2px 6px rgba(0,0,0,.05)}
+.loading-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 20px;border-radius:8px;z-index:2000;font-size:13px;display:flex;align-items:center;gap:8px}
+.spinner{display:inline-block;width:16px;height:16px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.map-attribution{position:absolute;bottom:0;right:0;background:rgba(255,255,255,.85);font-size:10px;padding:3px 8px;z-index:1000;border-radius:4px 0 0 0;color:#555}
+.route-legend{position:absolute;bottom:26px;right:10px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.15);z-index:1000;font-size:10px}
+.legend-line{display:flex;align-items:center;gap:6px;margin:2px 0}
+.legend-color{width:24px;height:5px;border-radius:3px}
+.map-controls{position:absolute;top:10px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:2px}
+.map-controls button{padding:4px 10px;background:rgba(255,255,255,.92);border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:10px;transition:.15s}
+.map-controls button.active{background:#302b63;color:#fff;border-color:#302b63}
+.map-controls button:hover{background:#f0f0f0}
+.basemap-control{position:absolute;top:80px;left:10px;z-index:1000;background:rgba(255,255,255,.92);border-radius:6px;padding:4px;box-shadow:0 1px 6px rgba(0,0,0,.15);display:flex;gap:2px;flex-wrap:wrap;max-width:320px}
+.basemap-control button{padding:3px 8px;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:10px;background:#fff;transition:.15s;white-space:nowrap}
+.basemap-control button.active{background:#302b63;color:#fff;border-color:#302b63}
+.basemap-control button:hover:not(.active){background:#f0f0f0}
+.basemap-control .tk-input{width:100px;font-size:10px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;margin-left:2px}
+input[type=text],input[type=number]{padding:5px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:11px;width:100%}
+.input-group{display:flex;gap:5px;margin-bottom:6px}
+.input-group input{flex:1}
+.info-text{font-size:10px;color:#999;margin-top:3px}
+.detail-panel{position:absolute;bottom:30px;left:10px;z-index:1000;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:14px;max-width:380px;font-size:12px;display:none}
+.detail-panel.show{display:block}
+.detail-panel .close-btn{position:absolute;top:6px;right:10px;cursor:pointer;font-size:18px;color:#999;line-height:1}
+.detail-panel .close-btn:hover{color:#333}
+.detail-panel table{width:100%;border-collapse:collapse;margin-top:6px}
+.detail-panel td{padding:3px 6px;border-bottom:1px solid #f0f0f0}
+.detail-panel td:first-child{color:#888;width:75px}
+.attr-table-container{max-height:340px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:4px;margin-top:4px}
+.attr-table{width:100%;border-collapse:collapse;font-size:10px}
+.attr-table thead{position:sticky;top:0;background:#302b63;color:#fff;z-index:1}
+.attr-table th{padding:5px 4px;text-align:left;font-weight:500;cursor:pointer;user-select:none}
+.attr-table td{padding:3px 4px;border-bottom:1px solid #f0f0f0;cursor:pointer}
+.attr-table tr:hover td{background:#e8e8ff}
+.attr-table tr.selected td{background:#c8e6c9!important}
+.attr-table .nav-btn{padding:1px 5px;font-size:9px;cursor:pointer;border:1px solid #302b63;background:#fff;color:#302b63;border-radius:3px;transition:.15s}
+.attr-table .nav-btn:hover{background:#302b63;color:#fff}
+.search-box{padding:5px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:11px;width:100%;margin-bottom:4px}
+.search-box:focus{outline:none;border-color:#302b63}
+.cat-filter{display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap}
+.cat-filter label{font-size:10px;cursor:pointer;padding:2px 6px;border:1px solid #ddd;border-radius:3px;background:#fff;user-select:none}
+.cat-filter label.active{background:#302b63;color:#fff;border-color:#302b63}
+.cat-filter label input{display:none}
+.import-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.import-row input{flex:1;padding:4px 6px;font-size:11px;border:1px solid #d9d9d9;border-radius:3px}
+.import-result{font-size:10px;color:#2e7d32;margin-top:4px;max-height:100px;overflow-y:auto}
+.scan-info{font-size:10px;color:#555;margin-top:4px;max-height:80px;overflow-y:auto}
+.nav-target-row{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 8px;background:#f5f5f5;border-radius:4px;margin-top:6px}
+.nav-target-row .clear-target{cursor:pointer;color:#e53935;font-weight:700}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1>&#x1F3E5; WebGIS — 医疗设施选址与导航系统</h1>
+    <div class="right-group">
+      <span style="font-size:11px;opacity:.7">城市:</span>
+      <select v-model="currentCity" @change="onCityChange" title="选择城市" aria-label="选择城市">
+        <option value="">-- 选择城市 --</option>
+        <option v-for="c in cities" :value="c.schema_name">{{ c.name }} ({{ c.available_layers?.length||0 }}层)</option>
+      </select>
+      <button class="btn-sm" @click="activeTab='import'" :style="{background:activeTab==='import'?'rgba(255,255,255,.25)':'rgba(255,255,255,.1)'}">&#x1F4C2; 导入</button>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="left-panel">
+      <div class="tabs">
+        <div class="tab" :class="{active:activeTab==='suitability'}" @click="activeTab='suitability'">&#x1F3D7; 选址</div>
+        <div class="tab" :class="{active:activeTab==='routing'}" @click="activeTab='routing'">&#x1F698; 导航</div>
+        <div class="tab" :class="{active:activeTab==='facilities'}" @click="switchToFacilities">&#x1F4CB; 设施</div>
+        <div class="tab" :class="{active:activeTab==='capacity'}" @click="activeTab='capacity'">&#x2699; 容量</div>
+      </div>
+
+      <!-- ===== 选址分析 ===== -->
+      <div v-show="activeTab==='suitability'" style="display:flex;flex-direction:column;gap:8px">
+        <div class="panel-card">
+          <h3>&#x1F4CA; 选址因子权重</h3>
+          <div class="slider-group">
+            <label>W1 人口密度 <span class="weight-display">{{ (weights.w_pop*100).toFixed(0) }}%</span></label>
+            <input type="range" v-model.number="weights.w_pop" min="0" max="1" step="0.05">
+          </div>
+          <div class="slider-group">
+            <label>W2 交通可达性 <span class="weight-display">{{ (weights.w_traffic*100).toFixed(0) }}%</span></label>
+            <input type="range" v-model.number="weights.w_traffic" min="0" max="1" step="0.05">
+          </div>
+          <div class="slider-group">
+            <label>W3 竞争回避 <span class="weight-display">{{ (weights.w_competition*100).toFixed(0) }}%</span></label>
+            <input type="range" v-model.number="weights.w_competition" min="0" max="1" step="0.05">
+          </div>
+          <div class="slider-group">
+            <label>W4 用地适宜性 <span class="weight-display">{{ (weights.w_landuse*100).toFixed(0) }}%</span></label>
+            <input type="range" v-model.number="weights.w_landuse" min="0" max="1" step="0.05">
+          </div>
+          <div style="margin-top:6px">
+            <label style="font-size:11px;color:#555">目标设施类型:</label>
+            <div class="radio-group" style="margin-top:3px">
+              <label v-for="ft in facilityTypes" :key="ft"><input type="radio" v-model="facilityType" :value="ft" :name="'suitType'">{{ ft==='hospital'?'医院':ft==='clinic'?'诊所':'药店' }}</label>
+            </div>
+          </div>
+          <button class="btn btn-primary" @click="runSuitability" :disabled="!currentCity||loading" style="margin-top:6px">&#x1F50D; 运行选址分析</button>
+          <div class="info-text">拖动滑块自动触发热力图重算</div>
+        </div>
+        <div class="panel-card" v-if="top5Grids.length">
+          <h3>&#x1F3C6; Top 5 推荐选址网格</h3>
+          <div v-for="(g,i) in top5Grids" :key="i" class="result-row" @click="flyToGrid(g)">
+            <span class="rank">#{{ i+1 }}</span>
+            <span class="badge" :class="i===0?'badge-green':i<3?'badge-blue':'badge-red'">{{ (g.suitability*100).toFixed(1) }}%</span>
+            <span style="color:#888;font-size:10px">[{{ g.centroid[0].toFixed(4) }},{{ g.centroid[1].toFixed(4) }}]</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 路径导航 ===== -->
+      <div v-show="activeTab==='routing'" style="display:flex;flex-direction:column;gap:8px">
+        <div class="panel-card">
+          <h3>&#x1F4CD; 起点设置</h3>
+          <div class="input-group">
+            <input type="text" v-model="startLon" placeholder="经度 (如 117.0)" aria-label="起点经度">
+            <input type="text" v-model="startLat" placeholder="纬度 (如 36.65)" aria-label="起点纬度">
+          </div>
+          <div style="font-size:10px;color:#999;margin-bottom:6px">点击地图可直接设定起点</div>
+          <div style="margin-bottom:6px">
+            <label style="font-size:11px;color:#555">导航模式:</label>
+            <div class="radio-group" style="margin-top:3px">
+              <label><input type="radio" v-model="navMode" value="nearest" name="navMode">最近设施</label>
+              <label><input type="radio" v-model="navMode" value="specific" name="navMode">指定设施</label>
+            </div>
+          </div>
+          <div v-if="navMode==='nearest'">
+            <label style="font-size:11px;color:#555">目标设施类型:</label>
+            <div class="radio-group" style="margin-top:3px">
+              <label v-for="ft in facilityTypes" :key="ft"><input type="radio" v-model="navFacilityType" :value="ft" name="navType">{{ ft==='hospital'?'医院':ft==='clinic'?'诊所':'药店' }}</label>
+            </div>
+          </div>
+          <div v-if="navMode==='specific'" class="nav-target-row">
+            <span v-if="navTarget" style="color:#302b63">&#x1F3E5; {{ navTarget.name||'已选择' }}</span>
+            <span v-else style="color:#999">请在地图上点击设施或从设施表中选择</span>
+            <span v-if="navTarget" class="clear-target" @click="navTarget=null" title="清除目标">&times;</span>
+          </div>
+          <div class="slider-group">
+            <label>诊疗能力权重 &alpha; <span class="weight-display">{{ navAlpha.toFixed(2) }}</span></label>
+            <input type="range" v-model.number="navAlpha" min="0" max="2" step="0.1">
+          </div>
+          <button class="btn btn-primary" @click="runRouting" :disabled="!currentCity||loading||(navMode==='specific'&&!navTarget)" style="margin-top:4px">&#x1F6E4; 开始导航</button>
+          <div class="info-text">&alpha;越大越看重诊疗能力 &middot; 综合 = 距离 - &alpha;&times;能力</div>
+        </div>
+        <div class="panel-card" v-if="routes.length">
+          <h3>&#x1F4CF; 路径结果</h3>
+          <div v-for="(r,i) in routes" :key="i" class="route-card" :class="{selected:selectedRoute===i}" @click="selectRoute(i)">
+            <strong>&#x1F535; {{ r.facility_name?.substring(0,18) }}</strong>
+            <div class="route-meta">
+              <span>&#x1F4CF; {{ r.distance_km }}km</span>
+              <span>&#x2B50; 能力:{{ r.capacity_score }}</span>
+              <span>&#x1F4CA; 综合:{{ r.composite_score }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 设施属性表 ===== -->
+      <div v-show="activeTab==='facilities'" style="display:flex;flex-direction:column;gap:8px">
+        <div class="panel-card">
+          <h3>&#x1F4CB; 医疗设施属性表 ({{ filteredFacilities.length }} / {{ facilitiesData.length }})</h3>
+          <input type="text" class="search-box" v-model="facilitySearch" placeholder="搜索设施名称...">
+          <div class="cat-filter">
+            <label :class="{active:facilityCatFilter==='all'}"><input type="radio" v-model="facilityCatFilter" value="all" @change="onCatFilterChange">全部</label>
+            <label :class="{active:facilityCatFilter==='hospital'}"><input type="radio" v-model="facilityCatFilter" value="hospital" @change="onCatFilterChange">医院</label>
+            <label :class="{active:facilityCatFilter==='clinic'}"><input type="radio" v-model="facilityCatFilter" value="clinic" @change="onCatFilterChange">诊所</label>
+            <label :class="{active:facilityCatFilter==='pharmacy'}"><input type="radio" v-model="facilityCatFilter" value="pharmacy" @change="onCatFilterChange">药店</label>
+            <label :class="{active:facilityCatFilter==='other'}"><input type="radio" v-model="facilityCatFilter" value="other" @change="onCatFilterChange">其他</label>
+          </div>
+          <div style="font-size:10px;color:#555;margin-bottom:4px">地图显示:</div>
+          <div class="cat-filter">
+            <label :class="{active:healthCatVisible.hospital}"><input type="checkbox" v-model="healthCatVisible.hospital" @change="applyHealthFilter">医院</label>
+            <label :class="{active:healthCatVisible.clinic}"><input type="checkbox" v-model="healthCatVisible.clinic" @change="applyHealthFilter">诊所</label>
+            <label :class="{active:healthCatVisible.pharmacy}"><input type="checkbox" v-model="healthCatVisible.pharmacy" @change="applyHealthFilter">药店</label>
+            <label :class="{active:healthCatVisible.other}"><input type="checkbox" v-model="healthCatVisible.other" @change="applyHealthFilter">其他</label>
+          </div>
+          <div class="attr-table-container">
+            <table class="attr-table">
+              <thead>
+                <tr>
+                  <th @click="sortFacilities('name')">名称 {{ sortField==='name'?(sortAsc?'▲':'▼'):'' }}</th>
+                  <th @click="sortFacilities('category')" style="width:40px;cursor:pointer">类型 {{ sortField==='category'?(sortAsc?'▲':'▼'):'' }}</th>
+                  <th @click="sortFacilities('capacity')" style="width:40px;cursor:pointer">能力 {{ sortField==='capacity'?(sortAsc?'▲':'▼'):'' }}</th>
+                  <th style="width:46px">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(f,idx) in pagedFacilities" :key="idx"
+                  :class="{selected:selectedFacilityIdx===idx}"
+                  @click="selectFacilityRow(idx, f)">
+                  <td :title="f.name" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.name||'未知' }}</td>
+                  <td><span class="badge" :class="f.category==='hospital'?'badge-red':f.category==='clinic'?'badge-blue':'badge-green'">{{ f.category||'?' }}</span></td>
+                  <td>{{ (f.capacity_score||1).toFixed(1) }}</td>
+                  <td><button class="nav-btn" @click.stop="navigateToFacility(f)" title="导航到此设施">&#x1F698;</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:10px">
+            <span style="color:#888">第 {{ facilityPage+1 }}/{{ totalFacilityPages||1 }} 页</span>
+            <div style="display:flex;gap:3px">
+              <button class="btn-small" @click="facilityPage=0" :disabled="facilityPage===0">|<</button>
+              <button class="btn-small" @click="facilityPage=Math.max(0,facilityPage-1)" :disabled="facilityPage===0"><</button>
+              <button class="btn-small" @click="facilityPage=Math.min(totalFacilityPages-1,facilityPage+1)" :disabled="facilityPage>=totalFacilityPages-1">></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 容量管理 ===== -->
+      <div v-show="activeTab==='capacity'" style="display:flex;flex-direction:column;gap:8px">
+        <div class="panel-card">
+          <h3>&#x2699; 设施诊疗能力管理</h3>
+          <div class="info-text" style="margin-bottom:6px">点击地图上的设施查看详情并编辑能力评分</div>
+          <div v-if="detailData && detailVisible" style="background:#f5f5f5;padding:8px;border-radius:6px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:4px">{{ detailData.facility.name||'未知设施' }}</div>
+            <div style="font-size:10px;color:#888">经度: {{ detailData.longitude?.toFixed(6) }} 纬度: {{ detailData.latitude?.toFixed(6) }}</div>
+            <div style="display:flex;gap:4px;align-items:center;margin-top:4px">
+              <span style="font-size:11px">能力评分:</span>
+              <input type="number" v-model.number="editCapacity" step="0.1" min="0" max="10" style="width:70px;font-size:11px;padding:3px 6px">
+              <button class="btn-small primary" @click="saveCapacity">保存</button>
+            </div>
+            <div v-if="capacityMsg" style="font-size:10px;color:#2e7d32;margin-top:3px">{{ capacityMsg }}</div>
+          </div>
+          <div v-else style="font-size:10px;color:#999;padding:10px;text-align:center">点击地图上任意医疗设施查看/编辑能力值</div>
+        </div>
+      </div>
+
+      <!-- ===== 导入 ===== -->
+      <div v-show="activeTab==='import'" style="display:flex;flex-direction:column;gap:8px">
+        <div class="panel-card">
+          <h3>&#x1F4C2; 导入新城市数据</h3>
+          <div class="import-row">
+            <input type="text" v-model="importDir" placeholder="GeoJSON/SHP目录路径" aria-label="导入目录">
+            <button class="btn btn-accent" @click="scanDirectory" :disabled="!importDir||loading">扫描</button>
+          </div>
+          <div class="scan-info" v-if="scanResult">
+            <div v-if="scanResult.has_mandatory" style="color:#2e7d32">&#x2705; 必要图层齐全 ({{ Object.keys(scanResult.layers).length }}层)</div>
+            <div v-else style="color:#c62828">&#x26A0; 缺少必要图层</div>
+            <div v-for="(v,k) in scanResult.layers" :key="k" style="margin-left:8px">{{ k }}: {{ v.feature_count }}条 {{ v.geometry_type }}</div>
+          </div>
+          <div class="import-row" style="margin-top:6px">
+            <input type="text" v-model="importCityName" placeholder="城市名称" aria-label="城市名称">
+            <input type="text" v-model="importSchema" placeholder="标识 (如: beijing)" aria-label="城市标识">
+          </div>
+          <button class="btn btn-primary" @click="importCity" :disabled="!importSchema||!importCityName||loading||!scanResult?.has_mandatory">导入并切换</button>
+          <div class="import-result" v-if="importMsg">{{ importMsg }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="map-container">
+      <div id="map"></div>
+      <div v-if="loading" class="loading-overlay"><span class="spinner"></span> 计算中...</div>
+      <div class="basemap-control">
+        <button v-for="bm in basemaps" :key="bm.id" :class="{active:currentBasemap===bm.id}" @click="switchBasemap(bm.id)" :title="bm.name">{{ bm.label }}</button>
+        <input v-if="currentBasemap==='tianditu'" v-model="tiandituKey" class="tk-input" placeholder="天地图Key" @change="switchBasemap('tianditu')">
+      </div>
+      <div class="map-attribution" v-html="basemapAttr"></div>
+      <div class="map-controls">
+        <button :class="{active:layerToggles.health}" @click="toggleLayer('health')">&#x1F3E5; 医疗设施</button>
+        <button :class="{active:layerToggles.landuse}" @click="toggleLayer('landuse')">&#x1F3D7; 用地</button>
+        <button :class="{active:layerToggles.roads}" @click="toggleLayer('roads')">&#x1F6E3; 道路</button>
+        <button :class="{active:layerToggles.boundary}" @click="toggleLayer('boundary')">&#x1F4CA; 边界</button>
+        <button :class="{active:layerToggles.railway}" @click="toggleLayer('railway')">&#x1F686; 铁路</button>
+        <button :class="{active:layerToggles.heatmap}" @click="toggleLayer('heatmap')">&#x1F30D; 热力图</button>
+        <button @click="clearResults">&#x274C; 清除</button>
+      </div>
+      <div class="route-legend" v-if="routes.length">
+        <div class="legend-line" v-for="(r,i) in routes" :key="i">
+          <div class="legend-color" :style="{background:routeColors[i]}"></div>
+          <span>#{{ i+1 }} {{ r.distance_km }}km (综合:{{ r.composite_score }})</span>
+        </div>
+      </div>
+      <div class="detail-panel" :class="{show:detailVisible}" id="detailPanel">
+        <span class="close-btn" @click="detailVisible=false">&times;</span>
+        <div v-if="detailData">
+          <h4 style="font-size:13px;color:#302b63;margin-bottom:6px">{{ detailData.facility.name||'未知' }}</h4>
+          <table>
+            <tr v-if="detailData.facility.category"><td>分类</td><td><span class="badge" :class="detailData.facility.category==='hospital'?'badge-red':detailData.facility.category==='clinic'?'badge-blue':'badge-green'">{{ detailData.facility.category }}</span></td></tr>
+            <tr v-if="detailData.facility.address"><td>地址</td><td>{{ detailData.facility.address }}</td></tr>
+            <tr><td>经度</td><td>{{ detailData.longitude.toFixed(6) }}</td></tr>
+            <tr><td>纬度</td><td>{{ detailData.latitude.toFixed(6) }}</td></tr>
+            <tr><td>能力评分</td><td><strong>{{ detailData.capacity_score }}</strong></td></tr>
+          </table>
+          <button class="btn-small primary" @click="navigateToFromDetail" style="margin-top:6px;width:100%">&#x1F698; 导航到此设施</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _m={map:null,baseTile:null,heatmapLayer:null,routeLayers:[],top5Markers:[],startMarker:null,facilityMarkers:[],healthLayer:null,healthRawData:null,landuseLayer:null,roadsLayer:null,railwayLayer:null,boundaryLayer:null,detailMarker:null,targetMarker:null,roadsData:null,landuseData:null,railwayData:null,boundaryData:null,healthGeoData:null,heatmapGridData:null,debounceTimer:null};
+
+var BASEMAP_CFG={
+  tianditu:{id:'tianditu',label:'天地图',name:'Tianditu',url:'https://t{s}.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk={k}',attr:'&copy; <a href="https://www.tianditu.gov.cn/" target="_blank">天地图</a> Tianditu',maxZoom:18,subdomains:'01234567',needsKey:true},
+  none:{id:'none',label:'无底图',name:'No Basemap',url:'',attr:'无底图 / No basemap',maxZoom:19,subdomains:''}
+};
+
+const{createApp,ref,watch,computed,onMounted}=Vue;
+createApp({setup(){
+  var cities=ref([]),currentCity=ref(''),loading=ref(false),activeTab=ref('suitability');
+  var facilityTypes=['hospital','clinic','pharmacy'];
+  var weights=ref({w_pop:0.25,w_traffic:0.25,w_competition:0.25,w_landuse:0.25});
+  var facilityType=ref('hospital'),top5Grids=ref([]),routes=ref([]),selectedRoute=ref(-1);
+  var startLon=ref('117.0'),startLat=ref('36.65'),navFacilityType=ref('hospital'),navAlpha=ref(0.5);
+  var navMode=ref('nearest'),navTarget=ref(null);
+  var routeColors=['#e53935','#1e88e5','#43a047'];
+  var layerToggles=ref({health:false,landuse:true,roads:true,railway:false,heatmap:false,boundary:true});
+  var healthCatVisible=ref({hospital:true,clinic:true,pharmacy:true,other:true});
+  var importDir=ref(''),importCityName=ref(''),importSchema=ref(''),importMsg=ref(''),scanResult=ref(null);
+  var detailVisible=ref(false),detailData=ref(null),editCapacity=ref(1.0),capacityMsg=ref('');
+  var facilitiesData=ref([]),facilitySearch=ref(''),facilityCatFilter=ref('all'),facilityPage=ref(0),pageSize=30;
+  var sortField=ref('name'),sortAsc=ref(true),selectedFacilityIdx=ref(-1);
+  var basemaps=ref([
+    {id:'tianditu',label:'天地图',name:'Tianditu'},
+    {id:'none',label:'无',name:'None'}
+  ]);
+  var currentBasemap=ref('none'),basemapAttr=ref(''),tiandituKey=ref('');
+
+  var filteredFacilities=computed(function(){
+    var list=facilitiesData.value;
+    var s=facilitySearch.value.toLowerCase().trim();
+    var cat=facilityCatFilter.value;
+    if(s) list=list.filter(function(f){return (f.name||'').toLowerCase().includes(s);});
+    if(cat!=='all') list=list.filter(function(f){return f.category===cat;});
+    if(sortField.value==='name'){
+      list=[...list].sort(function(a,b){return sortAsc.value?(a.name||'').localeCompare(b.name||''):(b.name||'').localeCompare(a.name||'');});
+    }else if(sortField.value==='category'){
+      list=[...list].sort(function(a,b){var va=a.category||'',vb=b.category||'';return sortAsc.value?va.localeCompare(vb):vb.localeCompare(va);});
+    }else if(sortField.value==='capacity'){
+      list=[...list].sort(function(a,b){return sortAsc.value?(a.capacity_score||0)-(b.capacity_score||0):(b.capacity_score||0)-(a.capacity_score||0);});
+    }
+    return list;
+  });
+  var totalFacilityPages=computed(function(){return Math.ceil(filteredFacilities.value.length/pageSize);});
+  var pagedFacilities=computed(function(){
+    var start=facilityPage.value*pageSize;
+    return filteredFacilities.value.slice(start,start+pageSize);
+  });
+
+  function initMap(){
+    _m.map=L.map('map',{zoomControl:true,attributionControl:false}).setView([36.65,117.0],11);
+    _m.map.on('click',onMapClick);
+    _m.map.on('zoomend',onZoomChange);
+    switchBasemap('none');
+  }
+
+  function onZoomChange(){
+    if(layerToggles.value.roads&&_m.roadsData)renderRoads(_m.roadsData);
+    if(layerToggles.value.landuse&&_m.landuseData)renderLanduse(_m.landuseData);
+    if(layerToggles.value.railway&&_m.railwayData)renderRailway(_m.railwayData);
+    if(layerToggles.value.boundary&&_m.boundaryData)renderBoundary(_m.boundaryData);
+  }
+
+  function switchBasemap(id){
+    if(_m.baseTile){_m.map.removeLayer(_m.baseTile);_m.baseTile=null;}
+    currentBasemap.value=id;
+    var cfg=BASEMAP_CFG[id];
+    if(!cfg||id==='none'){
+      var BlankLayer=L.GridLayer.extend({createTile:function(){var t=L.DomUtil.create('canvas','leaflet-tile');t.width=t.height=256;return t;}});
+      _m.baseTile=(new BlankLayer({maxZoom:19})).addTo(_m.map);
+      basemapAttr.value='无底图 / No basemap';
+      return;
+    }
+    if(cfg.needsKey&&!tiandituKey.value){
+      basemapAttr.value=cfg.attr+' — 请在上方输入API Key / Enter API key above';
+      return;
+    }
+    var url=cfg.url;
+    if(cfg.needsKey)url=url.replace('{k}',tiandituKey.value);
+    _m.baseTile=L.tileLayer(url,{
+      attribution:cfg.attr,
+      maxZoom:cfg.maxZoom,
+      subdomains:cfg.subdomains.split('').filter(Boolean)
+    }).addTo(_m.map);
+    basemapAttr.value=cfg.attr;
+  }
+
+  function onMapClick(e){
+    var lat=e.latlng.lat,lng=e.latlng.lng;
+    if(activeTab.value==='routing'){
+      startLon.value=lng.toFixed(6);startLat.value=lat.toFixed(6);drawStart(lat,lng);
+    }
+  }
+
+  function drawStart(lat,lng){
+    if(_m.startMarker)_m.map.removeLayer(_m.startMarker);
+    _m.startMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div style="background:#ff6f00;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;border:3px solid #fff;box-shadow:0 0 12px rgba(255,111,0,.6);font-size:11px">&#x1F3C1;</div>',iconSize:[30,30],iconAnchor:[15,15]})}).addTo(_m.map).bindPopup('<b>起点</b>');
+  }
+
+  function drawTarget(lat,lng,name){
+    if(_m.targetMarker)_m.map.removeLayer(_m.targetMarker);
+    _m.targetMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div style="background:#e65100;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;border:3px solid #fff;box-shadow:0 0 12px rgba(230,81,0,.6);font-size:10px">&#x1F3E5;</div>',iconSize:[30,30],iconAnchor:[15,15]})}).addTo(_m.map).bindPopup('<b>'+(name||'目标')+'</b>');
+  }
+
+  async function fetchCities(){
+    try{var r=await fetch('/api/cities');cities.value=await r.json();if(cities.value.length&&!currentCity.value){currentCity.value=cities.value[0].schema_name;await onCityChange();}}catch(e){}
+  }
+
+  async function onCityChange(){
+    clearResults();detailVisible.value=false;facilitiesData.value=[];facilityPage.value=0;facilitySearch.value='';navTarget.value=null;_m.healthRawData=null;
+    if(!currentCity.value)return;
+    try{
+      var r=await fetch('/api/cities/'+currentCity.value);
+      var city=await r.json();
+      if(city.bounds)_m.map.fitBounds([[city.bounds.min_lat,city.bounds.min_lon],[city.bounds.max_lat,city.bounds.max_lon]]);
+      await loadBaseLayers();
+      await loadFacilitiesData();
+    }catch(e){}
+  }
+
+  async function loadFromApi(name){
+    if(!currentCity.value)return null;
+    try{var r=await fetch('/api/layers/'+currentCity.value+'/'+name);if(!r.ok)return null;return await r.json();}catch(e){return null;}
+  }
+
+  async function loadBaseLayers(){
+    if(_m.healthLayer){_m.map.removeLayer(_m.healthLayer);_m.healthLayer=null;}
+    if(_m.roadsLayer){_m.map.removeLayer(_m.roadsLayer);_m.roadsLayer=null; _m.roadsData=null;}
+    if(_m.landuseLayer){_m.map.removeLayer(_m.landuseLayer);_m.landuseLayer=null; _m.landuseData=null;}
+    if(_m.railwayLayer){_m.map.removeLayer(_m.railwayLayer);_m.railwayLayer=null; _m.railwayData=null;}
+    if(_m.boundaryLayer){_m.map.removeLayer(_m.boundaryLayer);_m.boundaryLayer=null; _m.boundaryData=null;}
+    var bgTasks=[];
+    if(layerToggles.value.roads) bgTasks.push(loadFromApi('roads').then(function(d){if(d){_m.roadsData=d;renderRoads(d);}}));
+    if(layerToggles.value.landuse) bgTasks.push(loadFromApi('landuse').then(function(d){if(d){_m.landuseData=d;renderLanduse(d);}}));
+    if(layerToggles.value.railway) bgTasks.push(loadFromApi('railway_stations').then(function(d){if(d){_m.railwayData=d;renderRailway(d);}}));
+    if(layerToggles.value.boundary) bgTasks.push(loadFromApi('boundary').then(function(d){if(d){_m.boundaryData=d;renderBoundary(d);}}));
+    await Promise.all(bgTasks);
+    if(layerToggles.value.health){
+      var d=await loadFromApi('health');
+      if(d){_m.healthGeoData=d;renderHealth(d);}
+    }
+  }
+
+  async function loadFacilitiesData(){
+    try{
+      var geojson=await loadFromApi('health');
+      if(!geojson||!geojson.features)return;
+      facilitiesData.value=geojson.features.map(function(f){
+        var p=f.properties||{};
+        var coords=f.geometry&&f.geometry.coordinates?f.geometry.coordinates:[0,0];
+        var defCap=parseFloat(p.attribute||p.capacity);
+        if(isNaN(defCap))defCap=1.0;
+        return {
+          name:p.name||p.facility_name||p.Name||'未知',
+          category:p.category||p.fclass||p.type||'other',
+          address:p.address||p.Address||'',
+          lon:coords[0],lat:coords[1],
+          capacity_score:defCap
+        };
+      });
+      try{
+        var r=await fetch('/api/facilities/'+currentCity.value);
+        if(r.ok){
+          var caps=await r.json();
+          var capMap={};
+          (caps.facilities||[]).forEach(function(c){
+            var key=c.lon.toFixed(6)+','+c.lat.toFixed(6);
+            capMap[key]=c.capacity_score;
+          });
+          facilitiesData.value.forEach(function(f){
+            var key=f.lon.toFixed(6)+','+f.lat.toFixed(6);
+            if(capMap[key]!==undefined)f.capacity_score=capMap[key];
+          });
+        }
+      }catch(e){}
+    }catch(e){}
+  }
+
+  function renderHealth(data){
+    _m.healthRawData=data;
+    if(_m.healthLayer){_m.map.removeLayer(_m.healthLayer);_m.healthLayer=null;}
+    var catColors={hospital:'#e53935',clinic:'#1e88e5',pharmacy:'#43a047',other:'#9e9e9e'};
+    var cl=L.markerClusterGroup({
+      chunkedLoading:true,maxClusterRadius:60,spiderfyOnMaxZoom:true,
+      showCoverageOnHover:false,disableClusteringAtZoom:16,zoomToBoundsOnClick:true,
+      spiderfyDistanceMultiplier:1.2,
+      iconCreateFunction:function(cluster){
+        var n=cluster.getChildCount();
+        var size='small';
+        if(n>=1000)size='large';
+        else if(n>=100)size='medium';
+        return L.divIcon({html:'<div><span>'+n+'</span></div>',className:'marker-cluster marker-cluster-'+size,iconSize:L.point(40,40)});
+      }
+    });
+    cl.on('click',function(e){
+      if(e.layer&&e.layer._healthFeature){
+        L.DomEvent.stopPropagation(e);
+        onFacilityClick(e.layer._healthFeature);
+      }
+    });
+    var features=data.features||[];
+    for(var i=0;i<features.length;i++){
+      var f=features[i];
+      var coords=f.geometry&&f.geometry.coordinates;
+      if(!coords||coords.length<2)continue;
+      var c=(f.properties||{}).category||'other';
+      if(!healthCatVisible.value[c])continue;
+      var ll=[coords[1],coords[0]];
+      var m=L.circleMarker(ll,{pane:'markerPane',radius:6,fillColor:catColors[c]||'#9e9e9e',color:'#333',weight:1,fillOpacity:0.9});
+      m._healthFeature=f;
+      cl.addLayer(m);
+    }
+    _m.healthLayer=cl;
+    _m.map.addLayer(cl);
+    cl.bringToFront();
+  }
+
+  function applyHealthFilter(){
+    if(_m.healthRawData)renderHealth(_m.healthRawData);
+  }
+
+  function onFacilityClick(feature){
+    var lon=feature.geometry.coordinates[0],lat=feature.geometry.coordinates[1];
+    showDetail(feature);
+    if(activeTab.value==='routing'&&navMode.value==='specific'){
+      navTarget.value={name:feature.properties.name||'未知',lon:lon,lat:lat};drawTarget(lat,lon,navTarget.value.name);
+    }
+  }
+
+  async function showDetail(feature){
+    var lon=feature.geometry.coordinates[0],lat=feature.geometry.coordinates[1];
+    try{
+      var r=await fetch('/api/health/'+currentCity.value+'/'+lon+'/'+lat);
+      if(!r.ok)return;
+      detailData.value=await r.json();detailVisible.value=true;
+      editCapacity.value=detailData.value.capacity_score||1.0;capacityMsg.value='';
+      if(_m.detailMarker)_m.map.removeLayer(_m.detailMarker);
+      _m.detailMarker=L.marker([lat,lon],{icon:L.divIcon({className:'',html:'<div style="background:#ff0;width:20px;height:20px;border-radius:50%;border:3px solid #e65100;opacity:0.9"></div>',iconSize:[22,22],iconAnchor:[11,11]})}).addTo(_m.map).bindPopup('<b>'+(detailData.value.facility.name||'')+'</b>').openPopup();
+    }catch(e){}
+  }
+
+  async function saveCapacity(){
+    if(!detailData.value||!currentCity.value)return;
+    try{
+      var r=await fetch('/api/facilities/capacity',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({city_schema:currentCity.value,facility_name:detailData.value.facility.name||'',capacity_score:editCapacity.value})});
+      if(!r.ok)throw new Error(await r.text());
+      capacityMsg.value='已保存';(detailData.value).capacity_score=editCapacity.value;
+      loadFacilitiesData();
+      setTimeout(function(){capacityMsg.value='';},2000);
+    }catch(e){capacityMsg.value='保存失败:'+e.message;}
+  }
+
+  function renderRoads(data){
+    if(_m.roadsLayer)_m.map.removeLayer(_m.roadsLayer);
+    var z=_m.map.getZoom();
+    var vis=z<12?['motorway','trunk','primary']:z<14?['motorway','trunk','primary','secondary','tertiary']:null;
+    var rw={motorway:z<10?2:4,trunk:z<10?1.5:3,primary:z<12?1.5:3,secondary:1.5,tertiary:1,unclassified:.5,residential:.4,service:.3};
+    _m.roadsLayer=L.geoJSON(data,{filter:function(f){return vis?vis.includes(f.properties.fclass):true;},style:function(f){var c=f.properties.fclass||'other';return{color:c==='motorway'?'#e65100':c==='trunk'?'#f57c00':'#607d8b',weight:rw[c]||.5,opacity:c==='motorway'?.9:.65};}}).addTo(_m.map);
+  }
+  function renderLanduse(data){
+    if(_m.landuseLayer)_m.map.removeLayer(_m.landuseLayer);
+    var z=_m.map.getZoom();if(z<12)return;
+    var colors={residential:'#fff9c4',industrial:'#cfd8dc',commercial:'#ffccbc',park:'#c8e6c9',forest:'#a5d6a7',farmland:'#dcedc8',military:'#d7ccc8'};
+    _m.landuseLayer=L.geoJSON(data,{style:function(f){return{fillColor:colors[f.properties.fclass]||'#eee',color:z>=14?'#bbb':'transparent',weight:z>=14?.5:0,fillOpacity:.45};}}).addTo(_m.map);
+  }
+  function renderRailway(data){
+    if(_m.railwayLayer){_m.map.removeLayer(_m.railwayLayer);_m.railwayLayer=null;}
+    var cl=L.markerClusterGroup({
+      chunkedLoading:true,maxClusterRadius:60,
+      disableClusteringAtZoom:16,
+      iconCreateFunction:function(cluster){
+        var n=cluster.getChildCount();
+        var size='small';
+        if(n>=1000)size='large';
+        else if(n>=100)size='medium';
+        return L.divIcon({html:'<div><span>'+n+'</span></div>',className:'marker-cluster marker-cluster-'+size,iconSize:L.point(40,40)});
+      }
+    });
+    L.geoJSON(data,{
+      style:{color:'#795548',weight:2,opacity:.7,dashArray:'6,4'},
+      onEachFeature:function(f,l){
+        l.on('click',function(e){
+          L.DomEvent.stopPropagation(e);
+          var props=f.properties||{};
+          var name=props.name||props.Name||props.station_name||'未知站点';
+          l.bindPopup('<b>'+name+'</b>').openPopup();
+        });
+        cl.addLayer(l);
+      }
+    });
+    _m.railwayLayer=cl;
+    _m.map.addLayer(cl);
+  }
+  function renderBoundary(data){
+    if(_m.boundaryLayer)_m.map.removeLayer(_m.boundaryLayer);
+    _m.boundaryLayer=L.geoJSON(data,{style:{fillColor:'#e8eaf6',color:'#5c6bc0',weight:1.5,fillOpacity:.15,opacity:.8}}).addTo(_m.map);
+  }
+
+  function toggleLayer(name){
+    layerToggles.value[name]=!layerToggles.value[name];
+    if(name==='heatmap'){
+      if(!layerToggles.value.heatmap&&_m.heatmapLayer){_m.map.removeLayer(_m.heatmapLayer);_m.heatmapLayer=null;}
+      else if(layerToggles.value.heatmap&&!_m.heatmapLayer&&_m.heatmapGridData)renderHeatmap();
+    }else if(name==='health'){
+      if(!layerToggles.value.health&&_m.healthLayer){_m.map.removeLayer(_m.healthLayer);_m.healthLayer=null;}
+      else if(layerToggles.value.health&&!_m.healthLayer)loadFromApi('health').then(function(d){if(d){_m.healthGeoData=d;renderHealth(d);}});
+    }else if(name==='roads'){
+      if(!layerToggles.value.roads&&_m.roadsLayer){_m.map.removeLayer(_m.roadsLayer);_m.roadsLayer=null;}
+      else if(layerToggles.value.roads&&!_m.roadsLayer&&_m.roadsData)renderRoads(_m.roadsData);
+      else if(layerToggles.value.roads&&!_m.roadsData)loadFromApi('roads').then(function(d){if(d){_m.roadsData=d;renderRoads(d);}});
+    }else if(name==='landuse'){
+      if(!layerToggles.value.landuse&&_m.landuseLayer){_m.map.removeLayer(_m.landuseLayer);_m.landuseLayer=null;}
+      else if(layerToggles.value.landuse&&!_m.landuseLayer&&_m.landuseData)renderLanduse(_m.landuseData);
+      else if(layerToggles.value.landuse&&!_m.landuseData)loadFromApi('landuse').then(function(d){if(d){_m.landuseData=d;renderLanduse(d);}});
+    }else if(name==='railway'){
+      if(!layerToggles.value.railway&&_m.railwayLayer){_m.map.removeLayer(_m.railwayLayer);_m.railwayLayer=null;}
+      else if(layerToggles.value.railway&&!_m.railwayLayer&&_m.railwayData)renderRailway(_m.railwayData);
+      else if(layerToggles.value.railway&&!_m.railwayData)loadFromApi('railway_stations').then(function(d){if(d){_m.railwayData=d;renderRailway(d);}});
+    }else if(name==='boundary'){
+      if(!layerToggles.value.boundary&&_m.boundaryLayer){_m.map.removeLayer(_m.boundaryLayer);_m.boundaryLayer=null;}
+      else if(layerToggles.value.boundary&&!_m.boundaryLayer&&_m.boundaryData)renderBoundary(_m.boundaryData);
+      else if(layerToggles.value.boundary&&!_m.boundaryData)loadFromApi('boundary').then(function(d){if(d){_m.boundaryData=d;renderBoundary(d);}});
+    }
+  }
+
+  function renderHeatmap(){
+    if(!_m.heatmapGridData)return;
+    if(_m.heatmapLayer)_m.map.removeLayer(_m.heatmapLayer);
+    _m.heatmapLayer=L.geoJSON(_m.heatmapGridData,{style:function(f){var v=f.properties.suitability||0;return{fillColor:'rgb('+Math.round(255*(1-v))+','+Math.round(255*v)+',100)',color:'transparent',fillOpacity:.35,weight:0};}}).addTo(_m.map);
+  }
+
+  function debSuit(){
+    if(_m.debounceTimer)clearTimeout(_m.debounceTimer);
+    _m.debounceTimer=setTimeout(function(){if(activeTab.value==='suitability'&&currentCity.value)runSuitability();},500);
+  }
+
+  async function runSuitability(){
+    if(!currentCity.value)return;loading.value=true;
+    try{
+      var r=await fetch('/api/analyze/suitability',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city_schema:currentCity.value,facility_type:facilityType.value,w_population:weights.value.w_pop,w_traffic:weights.value.w_traffic,w_competition:weights.value.w_competition,w_landuse:weights.value.w_landuse})});
+      if(!r.ok)throw new Error(await r.text());
+      var data=await r.json();top5Grids.value=data.top5_grids;_m.heatmapGridData=data.grid_geojson;
+      renderHeatmap();layerToggles.value.heatmap=true;
+      _m.top5Markers.forEach(function(m){_m.map.removeLayer(m);});_m.top5Markers=[];
+      var icons=['&#x1F947;','&#x1F948;','&#x1F949;','4','5'];
+      top5Grids.value.forEach(function(g,i){var m=L.marker([g.centroid[1],g.centroid[0]],{icon:L.divIcon({className:'',html:'<div style="background:'+(i===0?'#e53935':i===1?'#1e88e5':i===2?'#43a047':'#5c6bc0')+';color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.3);font-size:12px">'+icons[i]+'</div>',iconSize:[34,34],iconAnchor:[17,17]})}).bindPopup('<div style="font-size:11px"><b>第'+(i+1)+'名</b><br>适宜度:'+(g.suitability*100).toFixed(1)+'%<br>人口:'+(g.score_population*100).toFixed(0)+'% 交通:'+(g.score_traffic*100).toFixed(0)+'%<br>竞争:'+(g.score_competition*100).toFixed(0)+'% 用地:'+(g.score_landuse*100).toFixed(0)+'%</div>').addTo(_m.map);_m.top5Markers.push(m);});
+    }catch(e){alert('选址分析失败:'+e.message);}
+    loading.value=false;
+  }
+
+  async function runRouting(){
+    if(!currentCity.value)return;loading.value=true;clearRoutes();
+    try{
+      var url,body;
+      if(navMode.value==='specific'&&navTarget.value){
+        url='/api/routing/navigate-to';
+        body={city_schema:currentCity.value,start_lon:parseFloat(startLon.value),start_lat:parseFloat(startLat.value),target_lon:navTarget.value.lon,target_lat:navTarget.value.lat,facility_name:navTarget.value.name||'目标',alpha:navAlpha.value};
+      }else{
+        url='/api/routing/navigate';
+        body={city_schema:currentCity.value,start_lon:parseFloat(startLon.value),start_lat:parseFloat(startLat.value),facility_type:navFacilityType.value,alpha:navAlpha.value,max_results:3};
+      }
+      var r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!r.ok)throw new Error(await r.text());
+      var data=await r.json();
+      var routeList=navMode.value==='specific'&&data.route?[data.route]:data.routes||[];
+      routes.value=routeList;selectedRoute.value=routeList.length?0:-1;
+      routeList.forEach(function(r,i){
+        if(r.route_geojson){
+          var l=L.geoJSON(r.route_geojson,{style:{color:routeColors[i],weight:i===0?8:5,opacity:1.0,dashArray:i===0?null:'10,6'}}).bindPopup('<div style="font-size:11px"><b>'+r.facility_name+'</b><br>距离:'+r.distance_km+'km<br>能力:'+r.capacity_score+'<br>综合:'+r.composite_score+'</div>').addTo(_m.map);_m.routeLayers.push(l);}});
+      _m.facilityMarkers.forEach(function(m){_m.map.removeLayer(m);});_m.facilityMarkers=[];
+      routeList.forEach(function(r,i){if(r.facility_lat&&r.facility_lon){var m=L.marker([r.facility_lat,r.facility_lon],{icon:L.divIcon({className:'',html:'<div style="background:'+routeColors[i]+';color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">'+(i+1)+'</div>',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(_m.map);_m.facilityMarkers.push(m);}});
+      if(routeList.length){var coords=[[parseFloat(startLat.value),parseFloat(startLon.value)]];routeList.forEach(function(r){if(r.facility_lat)coords.push([r.facility_lat,r.facility_lon]);});_m.map.fitBounds(coords,{padding:[60,60]});}
+    }catch(e){alert('导航失败:'+e.message);}
+    loading.value=false;
+  }
+
+  function navigateToFacility(facility){
+    navTarget.value={name:facility.name,lon:facility.lon,lat:facility.lat};navMode.value='specific';
+    drawTarget(facility.lat,facility.lon,facility.name);
+    _m.map.setView([facility.lat,facility.lon],15);
+    activeTab.value='routing';
+  }
+
+  function navigateToFromDetail(){
+    if(!detailData.value)return;
+    navTarget.value={name:detailData.value.facility.name||'目标',lon:detailData.value.longitude,lat:detailData.value.latitude};navMode.value='specific';
+    drawTarget(detailData.value.latitude,detailData.value.longitude,detailData.value.facility.name);
+    activeTab.value='routing';
+  }
+
+  function selectFacilityRow(idx,f){
+    selectedFacilityIdx.value=idx;_m.map.setView([f.lat,f.lon],16);
+    _m.facilityMarkers.forEach(function(m){_m.map.removeLayer(m);});_m.facilityMarkers=[];
+    var m=L.marker([f.lat,f.lon],{icon:L.divIcon({className:'',html:'<div style="background:#e65100;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">&#x1F3E5;</div>',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(_m.map).bindPopup('<b>'+f.name+'</b>').openPopup();_m.facilityMarkers.push(m);
+  }
+
+  function onCatFilterChange(){facilityPage.value=0;selectedFacilityIdx.value=-1;}
+  function sortFacilities(field){if(sortField.value===field)sortAsc.value=!sortAsc.value;else{sortField.value=field;sortAsc.value=true;}facilityPage.value=0;}
+  function switchToFacilities(){activeTab.value='facilities';loadFacilitiesData();}
+
+  async function scanDirectory(){
+    if(!importDir.value)return;loading.value=true;
+    try{var r=await fetch('/api/cities/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({directory_path:importDir.value})});scanResult.value=await r.json();var dirName=importDir.value.replace(/\\/g,'/').split('/').filter(Boolean).pop()||'NewCity';importCityName.value=dirName;importSchema.value=dirName.toLowerCase().replace(/[^a-z0-9_]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');importMsg.value='';}catch(e){scanResult.value=null;alert('扫描失败:'+e.message);}
+    loading.value=false;
+  }
+  async function importCity(){
+    if(!importSchema.value||!importDir.value)return;loading.value=true;
+    try{var r=await fetch('/api/cities/import-dynamic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city_name:importCityName.value,schema_name:importSchema.value,directory_path:importDir.value})});if(!r.ok)throw new Error(await r.text());var d=await r.json();importMsg.value='导入成功:'+d.city_name+' ('+Object.keys(d.layers).length+'层,'+d.capacity_imported+'设施)';await fetchCities();currentCity.value=importSchema.value;await onCityChange();activeTab.value='suitability';}catch(e){importMsg.value='失败:'+e.message;}
+    loading.value=false;
+  }
+
+  function selectRoute(i){selectedRoute.value=i;if(routes.value[i]&&routes.value[i].facility_lat)_m.map.panTo([routes.value[i].facility_lat,routes.value[i].facility_lon]);}
+  function flyToGrid(g){_m.map.panTo([g.centroid[1],g.centroid[0]]);}
+  function clearRoutes(){_m.routeLayers.forEach(function(l){_m.map.removeLayer(l);});_m.routeLayers=[];if(_m.targetMarker){_m.map.removeLayer(_m.targetMarker);_m.targetMarker=null;}}
+  function clearResults(){
+    clearRoutes();
+    if(_m.heatmapLayer){_m.map.removeLayer(_m.heatmapLayer);_m.heatmapLayer=null;_m.heatmapGridData=null;}
+    _m.top5Markers.forEach(function(m){_m.map.removeLayer(m);});_m.top5Markers=[];
+    _m.facilityMarkers.forEach(function(m){_m.map.removeLayer(m);});_m.facilityMarkers=[];
+    if(_m.detailMarker){_m.map.removeLayer(_m.detailMarker);_m.detailMarker=null;}
+    top5Grids.value=[];routes.value=[];selectedRoute.value=-1;detailVisible.value=false;layerToggles.value.heatmap=false;
+  }
+
+  watch(weights,debSuit,{deep:true});
+  watch(facilityType,debSuit);
+  onMounted(function(){initMap();fetchCities();});
+
+  return{cities,currentCity,loading,activeTab,facilityTypes,weights,facilityType,top5Grids,routes,selectedRoute,startLon,startLat,navFacilityType,navAlpha,navMode,navTarget,routeColors,layerToggles,healthCatVisible,importDir,importCityName,importSchema,importMsg,scanResult,detailVisible,detailData,editCapacity,capacityMsg,facilitiesData,facilitySearch,facilityCatFilter,facilityPage,sortField,sortAsc,filteredFacilities,totalFacilityPages,pagedFacilities,selectedFacilityIdx,basemaps,currentBasemap,basemapAttr,tiandituKey,switchBasemap,onCityChange,runSuitability,runRouting,selectRoute,flyToGrid,clearResults,toggleLayer,applyHealthFilter,scanDirectory,importCity,saveCapacity,switchToFacilities,selectFacilityRow,sortFacilities,onCatFilterChange,navigateToFacility,navigateToFromDetail};
+}}).mount('#app');
+</script>
+</body>
+</html>

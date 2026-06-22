@@ -1,0 +1,37 @@
+# =============================================
+# WebGIS — 医疗设施选址与导航系统
+# Medical Facility Site Selection & Navigation
+# =============================================
+# 安装: pip install -r requirements.txt
+# Python 版本要求: >=3.10
+# =============================================
+
+# Web 框架 / Web Framework
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+
+# 地理空间处理 / Geospatial Processing
+geopandas>=0.14.0
+shapely>=2.0.0
+fiona>=1.9.0
+pyproj>=3.6.0
+
+# 数据分析 / Data Analysis
+pandas>=2.0.0
+numpy>=1.24.0
+
+# 图算法 / Graph Algorithms
+networkx>=3.0
+scipy>=1.10.0
+
+# 数据库 / Database
+sqlalchemy>=2.0.0
+
+# 配置解析 / Configuration
+pyyaml>=6.0
+
+# 数据验证 / Data Validation
+pydantic>=2.0.0
+
+# HTTP 测试 (可选) / HTTP Testing (optional)
+requests>=2.28.0

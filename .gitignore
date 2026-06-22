@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Database
+*.db
+*.sqlite3
+
+# Data files (sensitive / large)
+Data/
+Data_Pre/
+RawData/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Environment
+.env
+.venv
+venv/
+
+# QGIS temp files
+*.qgd
+*.qgs~
+*.qgz~
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Backup archives
+*.zip
+*.tar.gz
+*.rar
+Prj_2/

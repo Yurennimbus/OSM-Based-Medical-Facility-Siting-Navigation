@@ -1,0 +1,80 @@
+# ========================================================
+# WebGIS — 医疗设施选址与导航系统
+# 城市数据配置文件 / City Data Configuration
+# ========================================================
+# 使用方法 / Usage:
+#   1. 将城市数据放入 Data/<your_city>/ 目录
+#   2. 在下方 cities 段中参照示例添加你的城市配置
+#   3. 运行 python init.py 初始化数据
+#   4. 运行 python run.py 启动服务
+#
+#   Place your city data under Data/<your_city>/
+#   Add your city config below following the example
+#   Run: python init.py -> python run.py
+# ========================================================
+
+# ----------------------------------------------------
+# 示例城市模板 / Example City Template
+# 取消下方注释并替换为你的数据即可使用
+# Uncomment and replace with your own data
+#
+# cities:
+#   mycity:
+#     name: "My City"
+#     schema: "mycity"
+#     source: "Data/mycity"
+#     bounds:
+#       min_lon: 116.0
+#       min_lat: 36.0
+#       max_lon: 118.0
+#       max_lat: 38.0
+#     layers:
+#       health:
+#         file: "health.geojson"
+#         type: "point"
+#         category_field: "category"
+#         name_field: "name"
+#       landuse:
+#         file: "landuse.geojson"
+#         type: "polygon"
+#         fclass_field: "fclass"
+#       roads:
+#         file: "roads.geojson"
+#         type: "line"
+#         fclass_field: "fclass"
+#       railways:
+#         file: "railways.geojson"
+#         type: "line"
+#         optional: true
+#       railway_stations:
+#         file: "railway_stations.geojson"
+#         type: "point"
+#         optional: true
+#       population:
+#         file: "population.geojson"
+#         type: "point"
+#         optional: true
+#         population_field: "total_pop"
+# ----------------------------------------------------
+
+# ========================================================
+# 服务器配置 / Server Configuration
+# ========================================================
+server:
+  host: "0.0.0.0"
+  port: 8000
+
+# ========================================================
+# 网格分析参数 / Grid Analysis Parameters
+# ========================================================
+grid:
+  default_cell_size: 0.005
+  max_cells: 50000
+
+# ========================================================
+# 路径导航参数 / Routing Parameters
+# ========================================================
+routing:
+  snap_tolerance_m: 2000
+  max_candidates: 30
+  local_road_padding_deg: 0.05
