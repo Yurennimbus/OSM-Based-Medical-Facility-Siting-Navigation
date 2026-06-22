@@ -144,7 +144,7 @@ python run.py
 1. 所有数据使用 WGS84 (EPSG:4326) 坐标系
 2. Shapefile 默认 UTF-8 编码读取，如有乱码请转换编码
 3. 大数据集（>5 万道路段）路由计算需 5-30 秒
-4.`Data/` 和 `*.db` 已加入 `.gitignore`，请勿提交地理数据
+4. `Data/` 和 `*.db` 已加入 `.gitignore`，请勿提交地理数据
 
 ---
 
@@ -242,7 +242,7 @@ Browser opens → `http://localhost:8000`. Press `Ctrl+C` to stop.
 1. All data must use WGS84 (EPSG:4326) CRS
 2. Shapefile encoding defaults to UTF-8; convert if garbled
 3. Large datasets (>50K road segments) may need 5-30s for routing
-4. `Data/` and `*.db` are gitignored — do not commit geographic data
+4.  `Data/` and `*.db` are gitignored — do not commit geographic data
 
 ---
 
