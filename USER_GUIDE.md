@@ -29,7 +29,7 @@
 
 - **适宜性**：网格单元对医疗设施选址的综合适宜度评分（0~1），越高越适宜。
 - **综合评分**：路径选择的综合评价指标：`距离 - α × 能力评分`。数值越低越优（距离短 + 能力高）。
-- **诊疗能力**：设施的服务能力评分（0~10），由用户编辑，影响路径推荐优先级。
+- **诊疗能力**：设施的服务能力评分（0~1），由用户编辑，影响路径推荐优先级。
 
 ---
 
@@ -251,7 +251,7 @@ This is a WebGIS platform for **spatial site selection analysis** and **route na
 
 - **Suitability**: Composite suitability score (0~1) for each grid cell. Higher is better.
 - **Composite Score**: Route evaluation metric: `Distance - α × Capacity_Score`. Lower is better.
-- **Capacity Score**: Facility service capability score (0~10), user-editable, affects route priority.
+- **Capacity Score**: Facility service capability score (0~1), user-editable, affects route priority.
 
 ---
 
