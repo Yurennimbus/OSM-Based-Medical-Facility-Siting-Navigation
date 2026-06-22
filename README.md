@@ -99,7 +99,7 @@ python run.py
 
 浏览器自动打开 → `http://localhost:8000`。按 `Ctrl+C` 停止。
 
-**也可以直接双击 start.bat 启动，自动打开网页后，在页面上方选择你要导入文件的目录，系统会自动扫描识别。**
+**也可以直接双击 start.bat 启动（注意提前修改替换该文件中的python路径），自动打开网页后，在页面上方选择你要导入文件的目录，系统会自动扫描识别。**
 
 ### 自定义城市数据
 
@@ -211,7 +211,7 @@ python run.py
 
 Browser opens → `http://localhost:8000`. Press `Ctrl+C` to stop.
 
-**You can also double-click start.bat to start it directly. After automatically opening the webpage, select the directory where you want to import the file at the top of the page, and the system will automatically scan and recognize it. **
+**You can also double-click start.bat to start it directly (Note to modify and replace the Python path in this file in advance). After automatically opening the webpage, select the directory where you want to import the file at the top of the page, and the system will automatically scan and recognize it. **
 
 ### Custom City Data
 
