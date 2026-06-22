@@ -183,9 +183,9 @@ python init.py
 地图左上角**底图选择器** / Map top-left:
 
 | 按钮 | 说明 |
-|---|---|---|
-| 天地图 | 国家天地图（需在官网申请 API Key） |
-| 无 | 浅灰纯色背景，无需 API Key，仅显示矢量图层 |
+|---|---|
+| 天地图 | 需在官网申请 API Key |
+| 无    | 浅灰纯色背景，仅显示矢量图层 |
 
 
 ---
@@ -405,9 +405,9 @@ Buttons at top-right of the map:
 Basemap selector at map top-left:
 
 | Button | Description |
-|---|---|---|
-| 天地图 (Tianditu) | National Tianditu (requires API key) |
-| 无 (None) | Light-gray background, no API key needed, vector layers only |
+|---|---|
+| 天地图 (Tianditu) | requires API key |
+| 无 (None) | Light-gray background, vector layers only |
 
 
 ---
