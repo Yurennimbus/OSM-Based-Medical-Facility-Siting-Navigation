@@ -37,23 +37,23 @@
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  顶部栏: 标题 | 城市切换下拉框 | 导入按钮                  │
+│  Top Bar: Title | City Selector | Import Button          │
 ├──────────────┬───────────────────────────────────────────┤
-│  左侧面板     │         地图区域                           │
+│  Left Panel  │         Map Area                          │
 │  ┌────────┐  │                                           │
-│  │选址/导航│  │    ┌─ 底图选择 ──┐                 │
-│  │/设施/容量│  │    │ 天地图 | 无    │                 │
-│  │  标签页 │  │    └───────────────┘                 │
-│  └────────┘  │    ┌─ 图层控制 ──┐                       │
-│              │    │ 设施|用地|道路 │                      │
-│  参数面板     │    │ 铁路|热力图    │                      │
-│  (动态切换)   │    └───────────────┘                       │
-│              │    ┌─ 详情面板 ──┐                        │
-│              │    │ 名称|分类|坐标 │                       │
-│              │    │ 能力评分|导航  │                       │
-│              │    └──────────────┘                        │
+│  │Tabs:   │  │    ┌─ Basemap Selector  ──┐               │
+│  │Suit/Nav│  │    │ Tianditu | None      │               │
+│  │Fac/Cap │  │    └──────────────────────┘               │
+│  └────────┘  │    ┌─ Layer Controls  ──┐                 │
+│              │    │ Health|Land|Road   │                 │
+│  Param Panel │    │ Rail|Heatmap|Clear │                 │
+│  (dynamic)   │    └────────────────────┘                 │
+│              │    ┌─ Detail Popup  ──┐                   │
+│              │    │ Name|Category|Pos│                   │
+│              │    │ Capacity|Navigate│                   │
+│              │    └──────────────────┘                   │
 ├──────────────┴───────────────────────────────────────────┤
-│                              Leaflet | 天地图 © Tianditu   │
+│                              Leaflet | Tianditu          │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -139,7 +139,7 @@
 
 1. 选择 **"容量"** 标签页
 2. **点击地图上的设施**查看详情，左下角弹出详情面板
-3. 调整"能力评分"（0~10），点击**"保存"**
+3. 调整"能力评分"（0~1），点击**"保存"**
 
 > 容量评分越高，路径导航时该设施越容易被优先推荐。
 
@@ -187,7 +187,6 @@ python init.py
 | 天地图 | 国家天地图（需在官网申请 API Key） |
 | 无 | 浅灰纯色背景，无需 API Key，仅显示矢量图层 |
 
-> 注：免费高德瓦片存在坐标偏移，已移除；OSM 国内访问受限。
 
 ---
 
@@ -260,23 +259,23 @@ This is a WebGIS platform for **spatial site selection analysis** and **route na
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  Top Bar: Title | City Selector | Import Button           │
+│  Top Bar: Title | City Selector | Import Button          │
 ├──────────────┬───────────────────────────────────────────┤
 │  Left Panel  │         Map Area                          │
 │  ┌────────┐  │                                           │
-│  │Tabs:    │  │    ┌─ Basemap Selector ──┐            │
-│  │Suit/Nav │  │    │ Tianditu | None       │            │
-│  │Fac/Cap  │  │    └──────────────────────┘            │
-│  └────────┘  │    ┌─ Layer Controls ──┐                │
-│              │    │ Health|Land|Road   │                │
-│  Param Panel │    │ Rail|Heatmap|Clear │                │
+│  │Tabs:   │  │    ┌─ Basemap Selector  ──┐               │
+│  │Suit/Nav│  │    │ Tianditu | None      │               │
+│  │Fac/Cap │  │    └──────────────────────┘               │
+│  └────────┘  │    ┌─ Layer Controls  ──┐                 │
+│              │    │ Health|Land|Road   │                 │
+│  Param Panel │    │ Rail|Heatmap|Clear │                 │
 │  (dynamic)   │    └────────────────────┘                 │
-│              │    ┌─ Detail Popup ──┐                   │
-│              │    │ Name|Category|Pos │                   │
-│              │    │ Capacity|Navigate │                   │
-│              │    └──────────────────┘                    │
+│              │    ┌─ Detail Popup  ──┐                   │
+│              │    │ Name|Category|Pos│                   │
+│              │    │ Capacity|Navigate│                   │
+│              │    └──────────────────┘                   │
 ├──────────────┴───────────────────────────────────────────┤
-│                              Leaflet | Tianditu             │
+│                              Leaflet | Tianditu          │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -362,7 +361,7 @@ This is a WebGIS platform for **spatial site selection analysis** and **route na
 
 1. Select the **"容量" (Capacity)** tab
 2. **Click a facility on the map** — a detail popup appears at bottom-left
-3. Adjust the **"Capacity Score"** (0~10), then click **"Save"**
+3. Adjust the **"Capacity Score"** (0~1), then click **"Save"**
 
 > Higher capacity scores make facilities more likely to be recommended in routing.
 
@@ -410,7 +409,6 @@ Basemap selector at map top-left:
 | 天地图 (Tianditu) | National Tianditu (requires API key) |
 | 无 (None) | Light-gray background, no API key needed, vector layers only |
 
-> Note: Free Gaode tiles have coordinate offset (removed); OSM restricted in China.
 
 ---
 
