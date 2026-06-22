@@ -77,8 +77,8 @@ Prj_1/
 
 ```bash
 # 1. 克隆仓库
-git clone <repo-url>
 cd <部署的文件夹位置>
+git clone <repo-url>
 
 # 2. 创建虚拟环境 (推荐)
 python -m venv venv
@@ -189,8 +189,8 @@ A universal WebGIS platform based on **FastAPI + Vue3 + Leaflet + NetworkX** for
 
 ```bash
 # 1. Clone
-git clone <repo-url>
 cd <file>
+git clone <repo-url>
 
 # 2. Create virtual environment (recommended)
 python -m venv venv
